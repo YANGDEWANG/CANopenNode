@@ -49,7 +49,7 @@
 #include "stm32f10x_conf.h"
 #include "CO_driver.h"
 #include "CO_Emergency.h"
-#include "led.h"
+//#include "led.h"
 #include <string.h>
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,13 +62,13 @@ static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, ui
 
 void InitCanLeds(void)
 {
-    vLED_InitRCC();
-    vLED_InitPort();
+    /*vLED_InitRCC();
+    vLED_InitPort();*/
 }
 
 void CanLedsSet(eCoLeds led)
 {
-    if (led & eCoLed_Green)
+   /* if (led & eCoLed_Green)
         vLED_OnPB14Led();
     else
         vLED_OffPB14Led();
@@ -77,7 +77,7 @@ void CanLedsSet(eCoLeds led)
         vLED_OnPB15Led();
     else
         vLED_OffPB15Led();
-
+*/
 }
 
 /*******************************************************************************
@@ -93,13 +93,14 @@ void CO_CANsetConfigurationMode(int32_t CANbaseAddress){
 /******************************************************************************/
 void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule){
     CANmodule->CANnormal = true;
+    CAN_TTComModeCmd(CANmodule->CANbaseAddress, DISABLE);//must be turned off to send 64bit data
 }
 
 
 /******************************************************************************/
 CO_ReturnError_t CO_CANmodule_init(
         CO_CANmodule_t         *CANmodule,
-        CAN_TypeDef            *CANbaseAddress,
+        uint32_t                CANbaseAddress,
         CO_CANrx_t              rxArray[],
         uint16_t                rxSize,
         CO_CANtx_t              txArray[],
@@ -117,7 +118,7 @@ CO_ReturnError_t CO_CANmodule_init(
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
 
-    CANmodule->CANbaseAddress = CANbaseAddress;
+    CANmodule->CANbaseAddress = (CAN_TypeDef*)CANbaseAddress;
     CANmodule->rxArray = rxArray;
     CANmodule->rxSize = rxSize;
     CANmodule->txArray = txArray;
@@ -212,7 +213,7 @@ CO_ReturnError_t CO_CANmodule_init(
 
    // CAN_OperatingModeRequest(CANmodule->CANbaseAddress, CAN_Mode_Normal); // Not needed as after init Can_init functions puts the controller in normal mode - VJ
 
-    CAN_ITConfig(CANmodule->CANbaseAddress, 0x03, ENABLE);
+    CAN_ITConfig(CANmodule->CANbaseAddress, (CAN_IT_TME | CAN_IT_FMP0), ENABLE);
 
     return CO_ERROR_NO;
 }
@@ -231,7 +232,7 @@ CO_ReturnError_t CO_CANrxBufferInit(
         uint16_t                mask,
         int8_t                  rtr,
         void                   *object,
-        void                  (*pFunct)(void *object, CO_CANrxMsg_t *message))
+        void                  (*pFunct)(void *object, const CO_CANrxMsg_t *message))
 {
     CO_CANrx_t *rxBuffer;
 	//CanRxMsg *rxBuffer;
@@ -302,32 +303,12 @@ CO_CANtx_t *CO_CANtxBufferInit(
 
 int8_t getFreeTxBuff(CO_CANmodule_t *CANmodule)
 {
-    uint8_t txBuff = CAN_TXMAILBOX_0;
-	
-    //if (CAN_TransmitStatus(CANmodule->CANbaseAddress, txBuff) == CAN_TxStatus_Ok)
-    for (txBuff = CAN_TXMAILBOX_0; txBuff <= (CAN_TXMAILBOX_2 + 1); txBuff++)
-    {
-        switch (txBuff)
-        {
-        case (CAN_TXMAILBOX_0 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME0 )
-                return txBuff;
-            else
-                break;
-        case (CAN_TXMAILBOX_1 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME1 )
-                return txBuff;
-            else
-                break;
-        case (CAN_TXMAILBOX_2 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME2 )
-                return txBuff;
-            else
-                break;
-				default:
-						break;
-        }
-    }
+    if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME0)
+        return CAN_TXMAILBOX_0;
+    if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME1)
+        return CAN_TXMAILBOX_1;
+    if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME2)
+        return CAN_TXMAILBOX_2;
     return -1;
 }
 
@@ -434,9 +415,9 @@ void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule)
 	        uint16_t index;
 	        uint8_t msgMatched = 0;
 	        CO_CANrx_t *msgBuff = CANmodule->rxArray;
+            uint16_t msg = (CAN1_RxMsg.StdId << 2) | (CAN1_RxMsg.RTR ? 2 : 0);
 	        for (index = 0; index < CANmodule->rxSize; index++)
 	        {
-	            uint16_t msg = (CAN1_RxMsg.StdId << 2) | (CAN1_RxMsg.RTR ? 2 : 0);
 	            if (((msg ^ msgBuff->ident) & msgBuff->mask) == 0)
 	            {
 	                msgMatched = 1;
@@ -532,8 +513,10 @@ static void CO_CANconfigGPIO (void)
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
-        /* Remap */
+    /* Remap */
+#ifndef CAN_NO_REMAP
     GPIO_PinRemapConfig(GPIO_Remapping_CAN, GPIO_CAN_Remap_State);
+#endif
     /* Configure CAN pin: RX */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_CAN_RX;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;

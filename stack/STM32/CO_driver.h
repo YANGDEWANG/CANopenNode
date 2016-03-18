@@ -78,8 +78,8 @@
     
 #define CLOCK_CAN                   RCC_APB1Periph_CAN1
 
-#define CAN_REMAP_2                 /* Select CAN1 remap 2 */
-#ifdef CAN1_NO_REMAP                /* CAN1 not remapped */
+//#define CAN_REMAP1                 /* Select CAN1 remap 2 */
+#ifdef CAN_NO_REMAP                /* CAN1 not remapped */
 #define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOA
 #define GPIO_Remapping_CAN          (0)
 #define GPIO_CAN                    GPIOA
@@ -95,7 +95,7 @@
 #define GPIO_Pin_CAN_TX             GPIO_Pin_9
 #define GPIO_CAN_Remap_State        ENABLE
 #endif
-#ifdef CAN_REMAP_2                 /* CAN1 remap 2 */
+#ifdef CAN_REMAP2                 /* CAN1 remap 2 */
 #define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOD
 #define GPIO_Remapping_CAN          GPIO_Remap2_CAN1
 #define GPIO_CAN                    GPIOD
@@ -188,7 +188,7 @@ typedef struct{
     uint16_t            txSize;
     volatile bool_t     CANnormal;
     volatile bool_t     useCANrxFilters;
-    volatile uint8_t    useCANrxFilters;
+    //volatile uint8_t    useCANrxFilters;
     volatile uint8_t    bufferInhibitFlag;
     volatile uint8_t    firstCANtxMessage;
     volatile uint16_t   CANtxCount;
@@ -213,13 +213,13 @@ void CanLedsSet(eCoLeds led);
 
 
 /* Request CAN configuration or normal mode */
-//void CO_CANsetConfigurationMode(CAN_TypeDef *CANbaseAddress);
-//void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule);
+void CO_CANsetConfigurationMode(int32_t CANbaseAddress);
+void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule);
 
 /* Initialize CAN module object. */
 CO_ReturnError_t CO_CANmodule_init(
         CO_CANmodule_t         *CANmodule,
-        CAN_TypeDef            *CANbaseAddress,
+        uint32_t                CANbaseAddress,
         CO_CANrx_t              rxArray[],
         uint16_t                rxSize,
         CO_CANtx_t              txArray[],
@@ -243,7 +243,7 @@ CO_ReturnError_t CO_CANrxBufferInit(
         uint16_t                mask,
         int8_t                  rtr,
         void                   *object,
-        void                  (*pFunct)(void *object, CO_CANrxMsg_t *message));
+        void                  (*pFunct)(void *object, const CO_CANrxMsg_t *message));
 
 
 /* Configure CAN message transmit buffer. */
