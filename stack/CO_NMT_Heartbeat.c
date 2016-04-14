@@ -317,5 +317,5 @@ CO_NMT_reset_cmd_t CO_NMT_process(
     }
 
 
-    return NMT->resetCommand;
+    return (CO_NMT_reset_cmd_t)NMT->resetCommand;
 }

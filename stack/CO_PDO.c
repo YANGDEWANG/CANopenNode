@@ -190,7 +190,7 @@ static void CO_TPDOconfigCom(CO_TPDO_t* TPDO, uint32_t COB_IDUsedByTPDO, uint8_t
  *
  * @return 0 on success, otherwise SDO abort code.
  */
-static uint32_t CO_PDOfindMap(
+static CO_SDO_abortCode_t CO_PDOfindMap(
         CO_SDO_t               *SDO,
         uint32_t                map,
         uint8_t                 R_T,
@@ -236,7 +236,7 @@ static uint32_t CO_PDOfindMap(
         if(R_T == 0) *ppData = (uint8_t*) &dummyRX;
         else         *ppData = (uint8_t*) &dummyTX;
 
-        return 0;
+        return CO_SDO_AB_NONE;
     }
 
     /* find object in Object Dictionary */
@@ -276,7 +276,7 @@ static uint32_t CO_PDOfindMap(
         }
     }
 
-    return 0;
+    return CO_SDO_AB_NONE;
 }
 
 
@@ -293,10 +293,10 @@ static uint32_t CO_PDOfindMap(
  *
  * @return 0 on success, otherwise SDO abort code.
  */
-static uint32_t CO_RPDOconfigMap(CO_RPDO_t* RPDO, uint8_t noOfMappedObjects){
+static CO_SDO_abortCode_t CO_RPDOconfigMap(CO_RPDO_t* RPDO, uint8_t noOfMappedObjects){
     int16_t i;
     uint8_t length = 0;
-    uint32_t ret = 0;
+    CO_SDO_abortCode_t ret = CO_SDO_AB_NONE;
     const uint32_t* pMap = &RPDO->RPDOMapPar->mappedObject1;
 
     for(i=noOfMappedObjects; i>0; i--){
@@ -359,10 +359,10 @@ static uint32_t CO_RPDOconfigMap(CO_RPDO_t* RPDO, uint8_t noOfMappedObjects){
  *
  * @return 0 on success, otherwise SDO abort code.
  */
-static uint32_t CO_TPDOconfigMap(CO_TPDO_t* TPDO, uint8_t noOfMappedObjects){
+static CO_SDO_abortCode_t CO_TPDOconfigMap(CO_TPDO_t* TPDO, uint8_t noOfMappedObjects){
     int16_t i;
     uint8_t length = 0;
-    uint32_t ret = 0;
+    CO_SDO_abortCode_t ret = CO_SDO_AB_NONE;
     const uint32_t* pMap = &TPDO->TPDOMapPar->mappedObject1;
 
     TPDO->sendIfCOSFlags = 0;
@@ -629,7 +629,6 @@ static CO_SDO_abortCode_t CO_ODF_RPDOmap(CO_ODF_arg_t *ODF_arg){
                &MBvar);
     }
 
-    return CO_SDO_AB_NONE;
 }
 
 
@@ -695,7 +694,6 @@ static CO_SDO_abortCode_t CO_ODF_TPDOmap(CO_ODF_arg_t *ODF_arg){
                &MBvar);
     }
 
-    return CO_SDO_AB_NONE;
 }
 
 

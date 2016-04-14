@@ -427,7 +427,7 @@ void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule)
 	        }
 	        //Call specific function, which will process the message
 	        if (msgMatched && msgBuff->pFunct)
-            msgBuff->pFunct(msgBuff->object, &CAN1_RxMsg);
+            msgBuff->pFunct(msgBuff->object, (const CO_CANrxMsg_t *)&CAN1_RxMsg);
 		}
 }
 

@@ -54,8 +54,8 @@
 
 
 #ifndef CO_USE_GLOBALS
-    #include <stdlib.h> /*  for malloc, free */
-    static uint32_t CO_memoryUsed = 0; /* informative */
+#include <stdlib.h> /*  for malloc, free */
+uint32_t CO_memoryUsed = 0; /* informative */
 #endif
 
 

@@ -165,7 +165,7 @@ typedef struct{
     uint16_t            ident;
     uint16_t            mask;
     void               *object;
-    void              (*pFunct)(void *object, CanRxMsg *message); // Changed by VJ
+    void              (*pFunct)(void *object, const CO_CANrxMsg_t *message); // Changed by VJ
 }CO_CANrx_t;
 
 
